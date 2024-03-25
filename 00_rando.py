@@ -65,3 +65,54 @@ def visualize_anomalies(patient_id, data, model, code_to_description, probabilit
 
 # To use this function:
 # visualize_anomalies(patient_id, data, model, code_to_description, probability_threshold=0.01, use_pca=False)
+
+
+
+
+
+import pandas as pd
+
+# Example list of feature names
+feature_names = [
+    'categorical__color_red', 'categorical__color_blue', 'categorical__color_green',
+    'numeric__height', 'numeric__weight'
+]
+
+# Example DataFrame (replace this with your actual df_final)
+df_final = pd.DataFrame({
+    'color': ['red', 'blue', 'green', 'red'],
+    'height': [5.0, 6.0, 5.5, 6.2],
+    'weight': [130, 150, 120, 180]
+})
+
+# Separate the feature names into categorical and numeric based on prefix
+categorical_features = [f.split('__')[1] for f in feature_names if f.startswith('categorical__')]
+numeric_features = [f.split('__')[1] for f in feature_names if f.startswith('numeric__')]
+
+# Initialize an empty DataFrame for the one-hot encoded features
+encoded_df = pd.DataFrame()
+
+# Process each categorical feature
+for feature in categorical_features:
+    # Extract the base feature name (without the value)
+    base_feature_name = feature.split('_')[0]
+    
+    # Check if the base feature is present in df_final
+    if base_feature_name in df_final.columns:
+        # Get the unique values for this base feature from the original list of feature names
+        unique_values = set(f.split('_')[-1] for f in feature_names if base_feature_name in f)
+        
+        # For each unique value, create a new column in encoded_df indicating the presence (1) or absence (0) of this value in the original DataFrame
+        for value in unique_values:
+            encoded_column_name = f"{base_feature_name}_{value}"
+            encoded_df[encoded_column_name] = (df_final[base_feature_name] == value).astype(int)
+
+# Add numeric features to the encoded_df
+for feature in numeric_features:
+    # Check if the numeric feature is in df_final and add it directly to encoded_df
+    if feature in df_final.columns:
+        encoded_df[feature] = df_final[feature]
+
+# Now encoded_df contains the one-hot encoded categorical features and the original numeric features
+print(encoded_df)
+
